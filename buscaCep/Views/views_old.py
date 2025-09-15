@@ -1,5 +1,5 @@
 from ..models import Endereco
-from ..serializers import EnderecoSerializers
+from ..serializers import EnderecoSerializer
 from ..services import ViaCEPService
 from rest_framework import status
 from rest_framework.response import Response
@@ -9,24 +9,22 @@ from rest_framework.decorators import api_view
 request.mothod, request.user, request.data e mesmo que não seja usado é obrigatório ter
 """
 @api_view(['GET'])
-def consultar_cep(request, cep_param: str):
-    cep = cep_param.replace('-','').replace('.','')
-    infoNotFaund = "Não localizado"
+def consultar_cep(request, cep: str):
+    cep_tratado = cep.replace('-','').replace('.','')
+
     try:
-        search_cep = Endereco.objects.exists(cep=cep)
-
-        if search_cep:
-            local_cep = Endereco.objects.get(cep=cep)
-            serializer = EnderecoSerializers(local_cep)
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        else:
-            return f"Buscando endereço da api externa"
+        local_cep = Endereco.objects.get(cep=cep_tratado)
+        serializer = EnderecoSerializer(local_cep)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    
     except Endereco.DoesNotExist:
-        external_cep = ViaCEPService.get_cep(cep)
+        external_cep = ViaCEPService.get_cep(cep_tratado)
 
-        if not 'erro':
+        if external_cep and 'erro' not in external_cep:
+            infoNotFaund = "Não localizado"
+
             new_cep = Endereco.objects.create(
-                cep = external_cep.get('cep',infoNotFaund),
+                cep = external_cep.get('cep',infoNotFaund).replace('-', '').replace('.',''),
                 logradouro = external_cep.get('logradouro', infoNotFaund),
                 complemento=external_cep.get('complemento', infoNotFaund ),
                 bairro=external_cep.get('bairro', infoNotFaund),
@@ -36,11 +34,11 @@ def consultar_cep(request, cep_param: str):
                 ddd = external_cep.get('ddd', infoNotFaund)
             )
 
-            serializer = EnderecoSerializers(new_cep)
+            serializer = EnderecoSerializer(new_cep)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         else:
             return Response(
-                {"CEP informado não existe na base de dados"},
+                {"erro": "CEP informado não existe na base de dados"},
                 status=status.HTTP_404_NOT_FOUND
             )
 
