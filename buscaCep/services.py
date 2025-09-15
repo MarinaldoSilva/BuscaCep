@@ -17,14 +17,15 @@ class ViaCEPService:
         try:
             response = requests.get(url)
             response.raise_for_status()
-            dados_cep = response
+            dados_cep = response.json()
 
             if "erro" in dados_cep:
-                return f"Informações não encontradas."
+                return None
+            
             return dados_cep
         
         except requests.exceptions:
-            return f"Não foi possível conectar, tenho noavemnte mais tarde"
+            return None
 
         
 
