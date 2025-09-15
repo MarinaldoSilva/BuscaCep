@@ -1,8 +1,8 @@
 from .models import Endereco
 from rest_framework import serializers
 
-class EnderecoSerializers(serializers.ModelSerializer):
+class EnderecoSerializer(serializers.ModelSerializer):
     class Meta:
         model = Endereco
-        fileds = '__all__'
+        fields = '__all__'        
         
