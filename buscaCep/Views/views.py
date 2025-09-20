@@ -1,9 +1,9 @@
 from rest_framework import viewsets, status
 from rest_framework.response import Response
 
-from serializers import EnderecoSerializer
-from models import Endereco
-from services import ViaCEPService
+from ..serializers import EnderecoSerializer
+from ..models import Endereco
+from ..services import ViaCEPService
 
 
 class EnderecoViewSet(viewsets.ModelViewSet):
@@ -20,6 +20,8 @@ class EnderecoViewSet(viewsets.ModelViewSet):
         
         dados_cep = ViaCEPService.get_cep(cep_param)
 
+        """isinstance verifica se esse obj e uma instancia de uma classe(na forma nativa do python),
+        já nesse contexo, esta verificando se o meu dados_cep esta retornando um dado do tipo string, se for retorna um error e para a execução"""
         if isinstance(dados_cep, str):
             return Response(
                 {"error": dados_cep},status=status.HTTP_400_BAD_REQUEST
